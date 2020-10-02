@@ -1,0 +1,8 @@
+To get the scripts_FlatAna.py to work, placed the script and the root files inside of a folder labeled dockertest
+in powershell, wrote in docker run command to mount C:\Users\Bryn\dockertest to /data so that dockertest would be readable by the docker container
+then set display to current ip
+after docker container has been set up, run the script with the following command
+python [name of script].py --input [name of input file] --output \ [name of new file]
+this worked for root files
+copy of docker command for future reference.
+docker run --rm -it -e DISPLAY=[Input IP here]:0 -v C:\Users\Bryn\dockertest:/data -w /data gitlab-registry.cern.ch/scipp/mario-mapyde/delphes:master
