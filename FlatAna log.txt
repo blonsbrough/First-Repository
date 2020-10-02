@@ -5,4 +5,4 @@ after docker container has been set up, run the script with the following comman
 python [name of script].py --input [name of input file] --output \ [name of new file]
 this worked for root files
 copy of docker command for future reference.
-docker run --rm -it -e DISPLAY=[Input IP here]:0 -v C:\Users\Bryn\dockertest:/data -w /data gitlab-registry.cern.ch/scipp/mario-mapyde/delphes:master
+docker run --rm -it -e DISPLAY=[Input IP here]:0 -v [filepath]:/data -w /data gitlab-registry.cern.ch/scipp/mario-mapyde/delphes:master
