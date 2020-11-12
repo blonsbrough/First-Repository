@@ -71,12 +71,12 @@ outfile=ROOT.TFile.Open(args.output,"RECREATE")
 
 
 # make a histogram
-h_MET = ROOT.TH1F("MET1","MET1",100,0,600)
-b_MET1 = ROOT.TH1F("Background MET1","Background MET 1",100,0,600)
-b_MET2 = ROOT.TH1F("Background MET2","Background MET 2",100,0,600)
-h_jPT = ROOT.TH1F("j1PT","j1PT",100,0,600)
-b_jPT1 = ROOT.TH1F("j1PT","j1PT",100,0,600)
-b_jPT2 = ROOT.TH1F("j1PT","j1PT",100,0,600)
+h_MET = ROOT.TH1F("","",100,0,600)
+b_MET1 = ROOT.TH1F("","",100,0,600)
+b_MET2 = ROOT.TH1F("","",100,0,600)
+h_jPT = ROOT.TH1F("","",100,0,600)
+b_jPT1 = ROOT.TH1F("","",100,0,600)
+b_jPT2 = ROOT.TH1F("","",100,0,600)
 ### Loop through all events in chain
 
 
@@ -159,110 +159,109 @@ h_jPT.SetStats(0)
 
 
 # write the histogram to the output file.
-###MET background canvas
-c1 = ROOT.TCanvas( 'c1', 'MET Histogram')##create canvas (this is where we can draw and output the graph)
-
-b_MET2.SetFillColor(ROOT.kGreen) ##set the colors of the graphs
-b_MET2.SetLineColor(ROOT.kGreen)
-
-b_MET1.SetFillColor(ROOT.kRed)
-b_MET1.SetLineColor(ROOT.kRed)
-
-Backgroundsum = b_MET1+b_MET2 #you can add histograms like this
-Backgroundsum.SetFillColor(ROOT.kOrange)
-Backgroundsum.SetLineColor(ROOT.kOrange)
-
-
-c1.SetLogy(ROOT.kTRUE) #This will set y to a log scale
-
-
-Backgroundsum.Draw("SAME C") #this will draw the backgroundsum histogram on the canvas, "SAME" specification does not erase the canvas before writing, allowing multiple overlayed graphs.
-c1.Update()
-
-b_MET1.Draw("SAME C")
-b_MET2.Draw("SAME C")
-c1.SetTitle("BackgroundSum") #sets the title of the canvas
-L1 = ROOT.TLegend(0.65,0.65,0.9,0.9)  #TLegend object is a special box, the numbers are initial x and y and final x and y positions for the legend box, ranging from 0 on the left and 1 on the right side.
-L1.AddEntry(b_MET1,"Background MET1","l") #this adds a legend entry, first bit is the histogram you want to reference, second is the name for the legend entry, and l specifies line as the image.
-L1.AddEntry(b_MET2,"Background MET2","l")
-L1.AddEntry(Backgroundsum,"Backgroundsum(MET)","l")
-L1.Draw("SAME")
-
-c1.Update() #make sure to update the canvas at the end of writing, or else it wont count.
-
-c1.Write() #write will now save the canvas in your output file.
-
 ###MET comparison Canvas
-c2 = ROOT.TCanvas( 'c2', 'MET2 Histogram') 
+c1 = ROOT.TCanvas( 'c1', 'MET SvB') 
 
+METBackgroundsum = b_MET1+b_MET2 #you can add histograms like this
+METBackgroundsum.SetFillColor(ROOT.kOrange) #set histogram colors
+METBackgroundsum.SetLineColor(ROOT.kOrange)
+h_MET.SetFillColor(ROOT.kBlue)
+h_MET.SetLineColor(ROOT.kBlue)
 
-Backgroundsum.Draw("SAME C") 
+METBackgroundsum.Draw("SAME C") #Draw command adds to canvas, "SAME" does not overwrite the canvas
 h_MET.Draw("SAME C")
+
+c1.SetLogy(ROOT.kTRUE) #sets graph to logarithmic scale
+
+L1 = ROOT.TLegend(0.65,0.65,0.9,0.9) #creates legend, numbers are fractions of screen.
+L1.AddEntry(h_MET,"h_MET","l") #add entry to legend, first entry is histogram to match to, 2nd is title, 3rd is specification, in this case l=line
+L1.AddEntry(METBackgroundsum,"Backgroundsum(MET)","l")
+L1.Draw("SAME") 
+
+c1.SetTitle("MET BvS")
+
+c1.Update() #update command refreshes and sets the current changes
+c1.Write() #write command saves to root file
+
+###jPT comparison Canvas
+c2 = ROOT.TCanvas( 'c2', 'jPT SvB')
+
+jPTBackgroundsum = b_jPT1+b_jPT2
+jPTBackgroundsum.SetFillColor(ROOT.kOrange)
+jPTBackgroundsum.SetLineColor(ROOT.kOrange)
+h_jPT.SetFillColor(ROOT.kBlue)
+h_jPT.SetLineColor(ROOT.kBlue)
+
+jPTBackgroundsum.Draw("SAME C")
+h_jPT.Draw("SAME C")
+
 c2.SetLogy(ROOT.kTRUE)
 
 L2 = ROOT.TLegend(0.65,0.65,0.9,0.9)
-L2.AddEntry(h_MET,"h_MET","l")
-L2.AddEntry(Backgroundsum,"Backgroundsum(MET)","l")
-L2.Draw()
-h_MET.SetFillColor(ROOT.kRed)
-h_MET.SetLineColor(ROOT.kRed)
-c2.SetTitle("TestTitle")
-
-c2.Update()
+L2.AddEntry(h_jPT,"h_jPT","l")
+L2.AddEntry(jPTBackgroundsum,"Backgroundsum(jPT)","l")
+L2.Draw("SAME")
 
 c2.Update()
 c2.Write()
 
-###jPT background canvas
-c3 = ROOT.TCanvas( 'c3', 'jPT Canvas')
-b_jPT2.SetFillColor(ROOT.kGreen)
-b_jPT2.SetLineColor(ROOT.kGreen)
+###BackgroundOnly (MET)
+c3 = ROOT.TCanvas( 'c3', 'METBackground Only')
 
-b_jPT1.SetFillColor(ROOT.kRed)
-b_jPT1.SetLineColor(ROOT.kRed)
+b_MET1.SetLineColor(ROOT.kRed)
+b_MET2.SetLineColor(ROOT.kGreen)
 
-Backgroundsum = b_jPT1+b_jPT2
-Backgroundsum.SetFillColor(ROOT.kOrange)
-Backgroundsum.SetLineColor(ROOT.kOrange)
+METBackgroundsum.Draw("SAME C")
+b_MET1.Draw("SAME")
+b_MET2.Draw("SAME")
 
 
 c3.SetLogy(ROOT.kTRUE)
 
-
-
-
-c3.Update()
-
-b_jPT1.Draw("SAME C")
-c3.Update()
-b_jPT2.Draw("SAME C")
-c3.Update()
-Backgroundsum.Draw("SAME C")
-c3.SetTitle("BackgroundSum")
 L3 = ROOT.TLegend(0.65,0.65,0.9,0.9)
-L3.AddEntry(b_jPT1,"Background jPT1","l")
-L3.AddEntry(b_jPT2,"Background jPT2","l")
-L3.AddEntry(Backgroundsum,"Backgroundsum(jPT)","l")
+L3.AddEntry(METBackgroundsum,"METbackgroundsum","l")
+L3.AddEntry(b_MET1,"METbackground1","l")
+L3.AddEntry(b_MET2,"METbackground2","l")
 L3.Draw("SAME")
 
 c3.Update()
 c3.Write()
+###BackgroundOnly (jpt)
+c4 = ROOT.TCanvas( 'c4', 'jPTBackground Only')
 
-###jPT comparison Canvas
-c4 = ROOT.TCanvas( 'c4', 'jPT2 Canvas')
-c4.Update()
-Backgroundsum.Draw("SAME C")
-h_jPT.Draw("SAME C")
+b_jPT1.SetLineColor(ROOT.kRed)
+b_jPT2.SetLineColor(ROOT.kGreen)
+
+jPTBackgroundsum.Draw("SAME C")
+b_jPT1.Draw("SAME")
+b_jPT2.Draw("SAME")
+
 c4.SetLogy(ROOT.kTRUE)
 
 L4 = ROOT.TLegend(0.65,0.65,0.9,0.9)
-L4.AddEntry(h_jPT,"h_jPT","l")
-L4.AddEntry(Backgroundsum,"Backgroundsum(jPT)","l")
-L4.Draw()
-h_jPT.SetFillColor(ROOT.kRed)
-h_jPT.SetLineColor(ROOT.kRed)
+L4.AddEntry(jPTBackgroundsum,"jPTbackgroundsum","l")
+L4.AddEntry(b_jPT1,"jPTbackground1","l")
+L4.AddEntry(b_jPT2,"jPTbackground2","l")
+L4.Draw("SAME")
+
 c4.Update()
 c4.Write()
+
+#TLorentz Vector graphs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # close the output file.
 outfile.Close()
