@@ -123,7 +123,7 @@ for event in chain:
   Ptdi = dijet_tlv.Pt()
 
   # require event to have some properties.
-  if event.mjj > 100:
+  if event.mjj > 1000 and event.MET > 200:
     # if the event passes, fill the histogram.
     h_MET.Fill(MET,weight)
     h_jPT.Fill(jPT,weight)
@@ -161,7 +161,7 @@ for event2 in chain2:
   bPtdi1 = bdijet_tlv1.Pt()
 
   # require event to have some properties.
-  if event2.mjj > 100:
+  if event2.mjj > 1000 and event2.MET > 200:
     # if the event passes, fill the histogram.
     b_MET1.Fill(bMET1,weight2)
     b_jPT1.Fill(bjPT1,weight2)
@@ -198,7 +198,7 @@ for event3 in chain3:
   bPtdi2 = bdijet_tlv2.Pt()
 
   # require event to have some properties.
-  if event3.mjj > 100:
+  if event3.mjj > 1000 and event3.MET > 200:
     # if the event passes, fill the histogram.
     b_MET2.Fill(bMET2,weight3)
     b_jPT2.Fill(bjPT2,weight3)
@@ -365,7 +365,7 @@ h_Phidi.SetLineColor(ROOT.kBlue)
 b_Phidi1.SetLineColor(ROOT.kRed)
 b_Phidi2.SetLineColor(ROOT.kGreen)
 
-Phidiackgroundsum.SetAxisRange(1,10**7,"Y")
+PhidiBackgroundsum.SetAxisRange(1,10**7,"Y")
 h_Phidi.SetAxisRange(1,10**7,"Y")
 b_Phidi1.SetAxisRange(1,10**7,"Y")
 b_Phidi2.SetAxisRange(1,10**7,"Y")
