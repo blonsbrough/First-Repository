@@ -37,12 +37,7 @@ def Event_Combination(Input_Directory):
     Scales = []
     MET_Test = []
     Output = {}
-    #Weirdly this directory is not removed by the histogram test
-    try:
-        Directories.remove('VBFSUSY_13_Higgsino_150_mmjj_500_-1_-212')
-        Directories.remove('VBFSUSY_13_Higgsino_150_mmjj_500_-1_-116')
-    except:
-        a=5
+
     #Test Directories to see if they actually contain a valid histogram file
     for item in Directories:
         composite = ["""grep "Cross-section" """+Input_Directory+item+"/docker_mgpy.log"+"| tail -1 | awk '{print $8}'"]
