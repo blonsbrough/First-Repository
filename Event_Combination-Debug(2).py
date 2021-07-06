@@ -66,20 +66,20 @@ def Event_Combination(Input_Directory, Background = False, Slice = False):
         elif Slice == 2:
             if "4000_7000" in item:
                 a=1
-                print("Graph for Slice 1, 4000-7000")
+                print("Graph for Slice 2, 4000-7000")
             else:
                 Directories.remove(item)
         elif Slice == 3:
             if "7000_10000" in item:
                 a=1
-                print("Graph for Slice 1, 7000-10000")
+                print("Graph for Slice 3, 7000-10000")
             else:
                 Directories.remove(item)
             
         elif Slice == 4:
             if "10000_-1" in item:
                 a=1
-                print("Graph for Slice 1, 10000--1")
+                print("Graph for Slice 4, 10000--1")
             else:
                 Directories.remove(item)
         elif Slice == False:
