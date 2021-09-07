@@ -18,11 +18,12 @@ import pandas as pd
 # In[2]:
 
 
-def Event_Combination(Input_Directory, Slice = False, Graph = False):
+def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = False):
     """
     Takes an input directory with root files, then combines and weights them properly, arranging them in an output dictionary and applying a cut.
     Input_Directory: Defines the directory for which to take event generation files.
     Slice: Defines the slice for which to take data for. 
+        Slice False does not slice the data, takes all files without divisions.
         Slice 1 Corresponds to mmjj 1000-4000
         Slice 2 Corresponds to mmjj 4000-7000
         Slice 3 Corresponds to mmjj 7000-10000
@@ -38,16 +39,24 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False):
     MET = []
     j1PT = []
     mjj = []
+    mjj_13 = []
+    mjj_23 = []
     j1Eta = []
     j1Phi = []
     j2PT = []
     j2Eta = []
     j2Phi = []
+    Etachange = []
+    j3PT = []
+    j3Eta = []
+    j3Phi = []
     weight = []
     Scales = []
     MET_Test = []
     Output = {}
     remove = []
+    mjjoptimized = []
+    message = "no message"
     #Ignore any background directories not of the current slice
     for item in Directories:
         composite = ["""grep "Cross-section" """+Input_Directory+item+"/docker_mgpy.log"+"| tail -1 | awk '{print $8}'"]
@@ -126,8 +135,14 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False):
         PathArray.append(uproot.open(item)['allev/hftree'])
     for item in PathArray:
         Branches.append(item.arrays())
+    x=0
+    
     for item in Branches:
-        mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        print(x)
+        print(Directories[x])
+        x+=1
+        #mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         for element in item[b"MET"][mask]:
             MET.append(element)
         for element in item[b"j1PT"][mask]:
@@ -144,10 +159,28 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False):
             j2Eta.append(element)
         for element in item[b"j2Phi"][mask]:
             j2Phi.append(element)
+        Etachange = np.subtract(j1Eta,j2Eta)
+        if optimize == True:
+            for element in item[b"mjj_13"][mask]:
+                mjj_13.append(element)
+            for element in item[b"mjj_23"][mask]:
+                mjj_23.append(element)
+            for element in item[b"j3PT"][mask]:
+                j3PT.append(element)
+            for element in item[b"j3Eta"][mask]:
+                j3Eta.append(element)
+            for element in item[b"j3Phi"][mask]:
+                j3Phi.append(element)
+            for i in range(len(item[b"MET"][mask])):
+                mjjarray = []
+                mjjarray.append(mjj[i])
+                mjjarray.append(mjj_13[i])
+                mjjarray.append(mjj_23[i])
+                mjjoptimized.append(np.max(mjjarray))
     #Take the weights and scale them by number of inputs
     i=0 
     for item in Branches:
-        mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         scale = (CrossSections[i]/sum(item[b"weight"]))
         i += 1
         Scales.append(scale)
@@ -157,17 +190,19 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False):
     TotalEvents = len(MET)
     #Use this Output function to implement and variables you want to calculate from this Combination Function
     Output = {"Directories":Directories, "Number of Events":TotalEvents,
-              "Cross Sections": CrossSections, "MET": MET, "j1PT":j1PT, 
-              "mjj":mjj, "j1Eta":j1Eta, "j1Phi":j1Phi, "j2PT":j2PT,
-              "j2Eta":j2Eta, "j2Phi":j2Phi, "weight":weight}
+              "Cross Sections":CrossSections, "MET":MET, "j1PT":j1PT, 
+              "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "j1Eta":j1Eta,
+              "j1Phi":j1Phi, "j2PT":j2PT, "j2Eta":j2Eta, "j2Phi":j2Phi,
+              "j3Eta":j1Eta,"j3Phi":j1Phi, "j3PT":j3PT, "weight":weight,
+              "mjjoptimized":mjjoptimized, "Etachange":Etachange}
     MET_ModifiedBranches = []
     for item in Branches:
-        mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         masked = item[b"MET"][mask]
         MET_ModifiedBranches.append(masked)
     Weights = []
     for item in Branches:
-        mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         maskedbackground = item[b"weight"][mask]
         Weights.append(maskedbackground)
     if Graph == True:
