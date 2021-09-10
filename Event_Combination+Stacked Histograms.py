@@ -18,7 +18,7 @@ import pandas as pd
 # In[2]:
 
 
-def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = False):
+def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = False, METcut = 0, mjj12cut = 0):
     """
     Takes an input directory with root files, then combines and weights them properly, arranging them in an output dictionary and applying a cut.
     Input_Directory: Defines the directory for which to take event generation files.
@@ -29,6 +29,10 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
         Slice 3 Corresponds to mmjj 7000-10000
         Slice 4 Corresponds to mmjj 10000--1
     Graph: If True displays an example graph of MET average vs individual contribution
+    optimize: If True takes into account a third jet.
+    METcut: designates the minimum value for the variable MET, all events with lower value will not be included
+    mjj12cut: designates the minimum value for the variable mjj calculated using jets 1 and 2.
+    
     """
     Directories = os.listdir(Input_Directory)
     TotalEvents = 0
@@ -37,6 +41,7 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     Branches = []
     CrossSections = []
     MET = []
+    METPhi = []
     j1PT = []
     mjj = []
     mjj_13 = []
@@ -46,7 +51,9 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     j2PT = []
     j2Eta = []
     j2Phi = []
-    Etachange = []
+    Etachange12 = []
+    Etachange13 = []
+    Etachange23 = []
     j3PT = []
     j3Eta = []
     j3Phi = []
@@ -55,7 +62,6 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     MET_Test = []
     Output = {}
     remove = []
-    mjjoptimized = []
     message = "no message"
     #Ignore any background directories not of the current slice
     for item in Directories:
@@ -116,9 +122,6 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
             Statement = "File "+item+" Unable to be combined, could not find Cross Section"
             print(Statement)
             print(3)
-    
-
-    
     for item in set(remove):
         Directories.remove(item)
     #Add cross sections and valid histograms to files
@@ -139,9 +142,11 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     
     for item in Branches:
         #mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
-        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         for element in item[b"MET"][mask]:
             MET.append(element)
+        for element in item[b"METPhi"][mask]:
+            METPhi.append(element)
         for element in item[b"j1PT"][mask]:
             j1PT.append(element)
         for element in item[b"mjj"][mask]:
@@ -156,7 +161,6 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
             j2Eta.append(element)
         for element in item[b"j2Phi"][mask]:
             j2Phi.append(element)
-        Etachange = np.subtract(j1Eta,j2Eta)
         if optimize == True:
             for element in item[b"mjj_13"][mask]:
                 mjj_13.append(element)
@@ -168,16 +172,14 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
                 j3Eta.append(element)
             for element in item[b"j3Phi"][mask]:
                 j3Phi.append(element)
-            for i in range(len(item[b"MET"][mask])):
-                mjjarray = []
-                mjjarray.append(mjj[i])
-                mjjarray.append(mjj_13[i])
-                mjjarray.append(mjj_23[i])
-                mjjoptimized.append(np.max(mjjarray))
+    Etachange12 = np.subtract(j1Eta,j2Eta)
+    if optimize == True:
+        Etachange13 = np.subtract(j1Eta,j3Eta)
+        Etachange23 = np.subtract(j2Eta,j3Eta)
     #Take the weights and scale them by number of inputs
     i=0 
     for item in Branches:
-        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         scale = (CrossSections[i]/sum(item[b"weight"]))
         i += 1
         Scales.append(scale)
@@ -187,44 +189,47 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     TotalEvents = len(MET)
     #Use this Output function to implement and variables you want to calculate from this Combination Function
     Output = {"Directories":Directories, "Number of Events":TotalEvents,
-              "Cross Sections":CrossSections, "MET":MET, "j1PT":j1PT, 
+              "Cross Sections":CrossSections, "MET":MET, "METPhi":METPhi, "j1PT":j1PT, 
               "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "j1Eta":j1Eta,
               "j1Phi":j1Phi, "j2PT":j2PT, "j2Eta":j2Eta, "j2Phi":j2Phi,
               "j3Eta":j1Eta,"j3Phi":j1Phi, "j3PT":j3PT, "weight":weight,
-              "mjjoptimized":mjjoptimized, "Etachange":Etachange}
-    MET_ModifiedBranches = []
-    for item in Branches:
-        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
-        masked = item[b"MET"][mask]
-        MET_ModifiedBranches.append(masked)
-    Weights = []
-    for item in Branches:
-        mask = (item[b"mjj"] > 0)&(item[b"MET"] > 0)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
-        maskedbackground = item[b"weight"][mask]
-        Weights.append(maskedbackground)
+               "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23}
+    #graph a sample graph of items vs their background, averages vs individual inputs.
     if Graph == True:
+        MET_ModifiedBranches = []
+        for item in Branches:
+            mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+            masked = item[b"MET"][mask]
+            MET_ModifiedBranches.append(masked)
+        Weights = []
+        for item in Branches:
+            mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+            maskedbackground = item[b"weight"][mask]
+            Weights.append(maskedbackground)
         for i in range(len(MET_ModifiedBranches)):
             plt.hist(MET_ModifiedBranches[i],bins=100,range=(0,2000),weights = Weights[i]*Scales[i], alpha=0.025, color='black')
         plt.hist(MET,bins=100,range=(0,2000),weights = weight, alpha=0.3, color='purple')
         plt.yscale('log')
         plt.title("Met Comparison, Inputs (Grey) vs Averaged Output (Purple); "+message)
         plt.show()
-    return(Output)
 
+    return(Output)
 
 # In[3]:
 
 
-def Background(Input_Directory, Graph = False, optimize = False):
+def Background(Input_Directory, Graph = False, optimize = False, METcut = 0, mjj12cut = 0):
     """
     Takes a directory of background events, sorts them by slice, averages over each slice, then combines into one output. Applies a cut.
     Input_Directory: The directory you wish to input to average over, really only works with a background directory.
     Graph: If true displays a test graph of average vs individual contribution for each slice.
+    optimize: determines if a third jet is available to be used.
     """
     Directories = []
     TotalEvents = 0
     CrossSections = []
     MET = []
+    METPhi = []
     j1PT = []
     mjj = []
     mjj_13 = []
@@ -234,16 +239,17 @@ def Background(Input_Directory, Graph = False, optimize = False):
     j2PT = []
     j2Eta = []
     j2Phi = []
-    Etachange = []
+    Etachange12 = []
+    Etachange13 = []
+    Etachange23 = []
     j3PT = []
     j3Eta = []
     j3Phi = []
     weight = []
     Output = {}
-    mjjoptimized = []
     Slices = [1, 2, 3, 4]
     for item in Slices:
-        partition = Event_Combination(Input_Directory, Slice = item, Graph = Graph, optimize = optimize)
+        partition = Event_Combination(Input_Directory, Slice = item, Graph = Graph, optimize = optimize, METcut = METcut, mjj12cut = mjj12cut)
         for item in partition["Directories"]:
             Directories.append(item)
         TotalEvents += partition["Number of Events"]
@@ -251,11 +257,12 @@ def Background(Input_Directory, Graph = False, optimize = False):
             CrossSections.append(item)
         for item in partition["MET"]: 
             MET.append(item)
+        for item in partition["METPhi"]: 
+            METPhi.append(item)
         for item in partition["j1PT"]: 
             j1PT.append(item)
         for item in partition["mjj"]: 
             mjj.append(item)
-        
         for item in partition["j1Eta"]: 
             j1Eta.append(item)
         for item in partition["j1Phi"]: 
@@ -266,8 +273,12 @@ def Background(Input_Directory, Graph = False, optimize = False):
             j2Eta.append(item)
         for item in partition["j2Phi"]: 
             j2Phi.append(item)
-        for item in partition["Etachange"]:
-            Etachange.append(item)
+        for item in partition["Etachange12"]:
+            Etachange12.append(item)
+        for item in partition["Etachange13"]:
+            Etachange13.append(item)
+        for item in partition["Etachange23"]:
+            Etachange23.append(item)
         if optimize == True:
             for item in partition["mjj_13"]: 
                 mjj_13.append(item)
@@ -279,20 +290,17 @@ def Background(Input_Directory, Graph = False, optimize = False):
                 j3Eta.append(item)
             for item in partition["j3Phi"]: 
                 j3Phi.append(item)
-            for item in partition["mjjoptimized"]:
-                mjjoptimized.append(item)
         for item in partition["weight"]: 
             weight.append(item)
             
         
     Output = {"Directories":Directories, "Number of Events":TotalEvents,
-              "Cross Sections": CrossSections, "MET": MET, "j1PT":j1PT, 
+              "Cross Sections": CrossSections, "MET": MET, "METPhi":METPhi, "j1PT":j1PT, 
               "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "j1Eta":j1Eta,
               "j1Phi":j1Phi, "j2PT":j2PT, "j2Eta":j2Eta, "j2Phi":j2Phi,
               "j3Eta":j1Eta,"j3Phi":j1Phi, "j3PT":j3PT, "weight":weight,
-              "mjjoptimized":mjjoptimized, "Etachange": Etachange}
+              "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23}
     return(Output)
-
 
 # In[4]:
 
