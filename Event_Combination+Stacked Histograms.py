@@ -36,6 +36,7 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     """
     Directories = os.listdir(Input_Directory)
     TotalEvents = 0
+    VBFJet = []
     HistogramArray = []
     PathArray = []
     Branches = []
@@ -46,6 +47,7 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     mjj = []
     mjj_13 = []
     mjj_23 = []
+    mjjoptimized =[]
     j1Eta = []
     j1Phi = []
     j2PT = []
@@ -173,9 +175,12 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
             for element in item[b"j3Phi"][mask]:
                 j3Phi.append(element)
     Etachange12 = np.subtract(j1Eta,j2Eta)
+    Phichange12 = np.subtract(j1Phi,j2Phi)
     if optimize == True:
         Etachange13 = np.subtract(j1Eta,j3Eta)
         Etachange23 = np.subtract(j2Eta,j3Eta)
+        Phichange13 = np.subtract(j1Phi,j3Phi)
+        Phichange23 = np.subtract(j2Phi,j3Phi)
     #Take the weights and scale them by number of inputs
     i=0 
     for item in Branches:
@@ -187,13 +192,145 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
         for item in Scaled_weight:
             weight.append(item)
     TotalEvents = len(MET)
+    #VBFJet optimization designation
+    for i in range(len(mjj)):
+        highmass = np.sort([mjj[i],mjj_23[i],mjj_13[i]])
+        if highmass[-1] == mjj[i]:
+            if j1PT[i] >= j2PT[i]:
+                JetHighmass = [1,2]
+            else:
+                JetHighmass = [1,2]
+        if highmass[-1] == mjj_23[i]:
+            if j2PT[i] >= j3PT[i]:
+                JetHighmass = [2,3]
+            else:
+                JetHighmass = [3,2]
+        if highmass[-1] == mjj_13[i]:
+            if j1PT[i] >= j3PT[i]:
+                JetHighmass = [1,3]
+            else:
+                JetHighmass = [3,1]
+        
+        highEtachange = np.sort([abs(Etachange12[i]),abs(Etachange23[i]),abs(Etachange13[i])])
+        if highEtachange[-1] == abs(Etachange12[i]):
+            if j1PT[i] >= j2PT[i]:
+                JetHighEtachange = [1,2]
+            else:
+                JetHighEtachange = [1,2]
+        if highEtachange[-1] == abs(Etachange23[i]):
+            if j2PT[i] >= j3PT[i]:
+                JetHighEtachange = [2,3]
+            else:
+                JetHighEtachange = [3,2]
+        if highEtachange[-1] == abs(Etachange13[i]):
+            if j1PT[i] >= j3PT[i]:
+                JetHighEtachange = [1,3]
+            else:
+                JetHighEtachange = [3,1]
+        
+        highEtaproduct = np.sort([abs(j1Eta[i]*j2Eta[i]),abs(j2Eta[i]*j3Eta[i]),abs(j1Eta[i]*j3Eta[i])])
+        if highEtaproduct[-1] == abs(j1Eta[i]*j2Eta[i]):
+            if j1PT[i] >= j2PT[i]:
+                JetHighEtaProduct = [1,2]
+            else:
+                JetHighEtaProduct = [1,2]
+        if highEtaproduct[-1] == abs(j2Eta[i]*j3Eta[i]):
+            if j2PT[i] >= j3PT[i]:
+                JetHighEtaProduct = [2,3]
+            else:
+                JetHighEtaProduct = [3,2]
+        if highEtaproduct[-1] == abs(j1Eta[i]*j3Eta[i]):
+            if j1PT[i] >= j3PT[i]:
+                JetHighEtaProduct = [1,3]
+            else:
+                JetHighEtaProduct = [3,1]
+        
+        highPTproduct = np.sort([abs(j1PT[i]*j2PT[i]),abs(j2PT[i]*j3PT[i]),abs(j1PT[i]*j3PT[i])])
+        if highPTproduct[-1] == abs(j1PT[i]*j2PT[i]):
+            if j1PT[i] >= j2PT[i]:
+                JetHighPTProduct = [1,2]
+            else:
+                JetHighPTProduct = [1,2]
+        if highPTproduct[-1] == abs(j2PT[i]*j3PT[i]):
+            if j2PT[i] >= j3PT[i]:
+                JetHighPTProduct = [2,3]
+            else:
+                JetHighPTProduct = [3,2]
+        if highPTproduct[-1] == abs(j1PT[i]*j3PT[i]):
+            if j1PT[i] >= j3PT[i]:
+                JetHighPTProduct = [1,3]
+            else:
+                JetHighPTProduct = [3,1]
+        
+        highPhichange = np.sort([abs(Phichange12[i]),abs(Phichange23[i]),abs(Phichange13[i])])
+        if highPhichange[-1] == abs(Phichange12[i]):
+            if j1PT[i] >= j2PT[i]:
+                JetHighPhichange = [1,2]
+            else:
+                JetHighPhichange = [1,2]
+        if highPhichange[-1] == abs(Phichange23[i]):
+            if j2PT[i] >= j3PT[i]:
+                JetHighPhichange = [2,3]
+            else:
+                JetHighPhichange = [3,2]
+        if highPhichange[-1] == abs(Phichange13[i]):
+            if j1PT[i] >= j3PT[i]:
+                JetHighPhichange = [1,3]
+            else:
+                JetHighPhichange = [3,1]
+        
+        highDeltaR = np.sort([abs((Etachange12[i]**2+Phichange12[i]**2)**0.5),abs((Etachange23[i]**2+Phichange23[i]**2)**0.5),abs((Etachange13[i]**2+Phichange13[i]**2)**0.5)])
+        if highDeltaR[-1] == abs((Etachange12[i]**2+Phichange12[i]**2)**0.5):
+            if j1PT[i] >= j2PT[i]:
+                JetHighDeltaR = [1,2]
+            else:
+                JetHighDeltaR = [1,2]
+        if highDeltaR[-1] == abs((Etachange23[i]**2+Phichange23[i]**2)**0.5):
+            if j2PT[i] >= j3PT[i]:
+                JetHighDeltaR = [2,3]
+            else:
+                JetHighDeltaR = [3,2]
+        if highDeltaR[-1] == abs((Etachange13[i]**2+Phichange13[i]**2)**0.5):
+            if j1PT[i] >= j3PT[i]:
+                JetHighDeltaR = [1,3]
+            else:
+                JetHighDeltaR = [3,1]
+        Event = [JetHighmass,JetHighEtachange,JetHighPTProduct,JetHighEtaProduct,JetHighPhichange,JetHighDeltaR]
+        mjjoptimized.append(np.max(highEtachange))
+        VBFJet.append(Event)
+        Jetsort = JetHighEtachange
+        if Jetsort[0] == 1:
+            j1PT[i] = j1PT[i]
+            j1Eta[i] = j1Eta[i]
+            j1Phi[i] = j1Phi[i]
+        elif Jetsort[0] == 2:
+            j1PT[i] = j2PT[i]
+            j1Eta[i] = j2Eta[i]
+            j1Phi[i] = j2Phi[i]
+        elif Jetsort[0] == 3:
+            j1PT[i] = j3PT[i]
+            j1Eta[i] = j3Eta[i]
+            j1Phi[i] = j3Phi[i]
+        if Jetsort[1] == 1:
+            j2PT[i] = j1PT[i]
+            j2Eta[i] = j1Eta[i]
+            j2Phi[i] = j1Phi[i]
+        elif Jetsort[1] == 2:
+            j2PT[i] = j2PT[i]
+            j2Eta[i] = j2Eta[i]
+            j2Phi[i] = j2Phi[i]
+        elif Jetsort[1] == 3:
+            j2PT[i] = j3PT[i]
+            j2Eta[i] = j3Eta[i]
+            j2Phi[i] = j3Phi[i]
     #Use this Output function to implement and variables you want to calculate from this Combination Function
     Output = {"Directories":Directories, "Number of Events":TotalEvents,
               "Cross Sections":CrossSections, "MET":MET, "METPhi":METPhi, "j1PT":j1PT, 
-              "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "j1Eta":j1Eta,
+              "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "mjjoptimized":mjjoptimized, "j1Eta":j1Eta,
               "j1Phi":j1Phi, "j2PT":j2PT, "j2Eta":j2Eta, "j2Phi":j2Phi,
               "j3Eta":j1Eta,"j3Phi":j1Phi, "j3PT":j3PT, "weight":weight,
-               "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23}
+              "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23,
+              "VBFJet":VBFJet}
     #graph a sample graph of items vs their background, averages vs individual inputs.
     if Graph == True:
         MET_ModifiedBranches = []
@@ -226,6 +363,7 @@ def Background(Input_Directory, Graph = False, optimize = False, METcut = 0, mjj
     optimize: determines if a third jet is available to be used.
     """
     Directories = []
+    VBFJet = []
     TotalEvents = 0
     CrossSections = []
     MET = []
@@ -234,6 +372,7 @@ def Background(Input_Directory, Graph = False, optimize = False, METcut = 0, mjj
     mjj = []
     mjj_13 = []
     mjj_23 = []
+    mjjoptimized = []
     j1Eta = []
     j1Phi = []
     j2PT = []
@@ -292,26 +431,28 @@ def Background(Input_Directory, Graph = False, optimize = False, METcut = 0, mjj
                 j3Phi.append(item)
         for item in partition["weight"]: 
             weight.append(item)
+        for item in partition["VBFJet"]: 
+            VBFJet.append(item)
             
         
     Output = {"Directories":Directories, "Number of Events":TotalEvents,
               "Cross Sections": CrossSections, "MET": MET, "METPhi":METPhi, "j1PT":j1PT, 
-              "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23, "j1Eta":j1Eta,
+              "mjj":mjj,"mjj_13":mjj_13, "mjj_23":mjj_23,"mjjoptimized":mjjoptimized, "j1Eta":j1Eta,
               "j1Phi":j1Phi, "j2PT":j2PT, "j2Eta":j2Eta, "j2Phi":j2Phi,
               "j3Eta":j1Eta,"j3Phi":j1Phi, "j3PT":j3PT, "weight":weight,
-              "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23}
+              "Etachange12":Etachange12,"Etachange13":Etachange13,"Etachange23":Etachange23,
+              "VBFJet":VBFJet}
     return(Output)
-
 # In[4]:
 
 
 #Combine Events, Signal and Background.
 SignalDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Signal/150mjj/"
-EWKBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/EWKBackground/"
-QCDBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/QCDBackground/"
-A = Event_Combination(SignalDirectory, Graph = True)
-B = Background(EWKBackgroundDirectory, Graph = True)
-C = Background(QCDBackgroundDirectory, Graph = True)
+EWKBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/EWKBDirect/"
+QCDBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/QCDBDirect/"
+A = Event_Combination(SignalDirectory, Graph = False, optimize = True, METcut = 400)
+B = Background(EWKBDirect, Graph = False, optimize = True, METcut = 400)
+C = Background(QCDBDirect, Graph = False, optimize = True, METcut = 400)
 
 
 # In[5]:
