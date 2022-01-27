@@ -8,18 +8,6 @@
 
 get_ipython().run_line_magic('config', 'InteractiveShell.ast_node_interactivity="last_expr_or_assign"')
 
-
-# In[13]:
-
-
-A = [1,2,3]
-B = [4,5,-99]
-C = [5,6,7]
-data = {'A':A,'B':B,'C':C}
-dataframe = pd.DataFrame(data)
-dataframe.loc[dataframe['B']<0]
-
-
 # In[2]:
 
 
@@ -352,12 +340,6 @@ names = ['Index','MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j
 # In[7]:
 
 
-print(len(names))
-
-
-# In[7]:
-
-
 def RoottoTensorflow(filepath,SvB):
     Tree = uproot.open(filepath)
     Tree = Tree[SvB]
@@ -398,157 +380,8 @@ def RoottoDataset(filepath,SvB):
 
 
 Signalbranches = RoottoDataset(SignalPath,'Signal')
-
-
-# In[67]:
-
-
-#plt.hist(Signalbranches[7],bins=1000,weights=Signalbranches[15])
-plt.hist(Signalbranches[14],bins=100,weights=Signalbranches[15],range=[-1000,500])
-
-plt.show()
-print(names[14])
-
-
-# In[68]:
-
-
-x=0
-for item in Signalbranches[14]:
-    if abs(item) > 900:
-        x+=1
-print(x)
-print(len(Signalbranches))
-
-
-# In[47]:
-
-
-
-
-
-# In[30]:
-
-
-len(Signalbranches[8])
-
-
-# In[10]:
-
-
 EWKBackgroundbranches = RoottoDataset(EWKBackgroundPath,'EWKBackground')
 QCDBackgroundbranches = RoottoDataset(QCDBackgroundPath,'QCDBackground')
-
-
-# In[17]:
-
-
-print(len(['MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j1Eta","j2Eta","j3Eta","j1Phi","j2Phi","j3Phi","j2PT","j3PT","weight","Etachange12","Etachange23","Etachange13"]))
-
-
-# In[20]:
-
-
-names = ['MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j1Eta","j2Eta","j3Eta","j1Phi","j2Phi","j3Phi","j2PT","j3PT","weight","Etachange12","Etachange23","Etachange13"]
-
-
-# In[17]:
-
-
-print(abs(np.corrcoef(Signalbranches[1],Signalbranches[2]))[1][0])
-
-
-# In[18]:
-
-
-arg = []
-corr = []
-for i in Signalbranches:
-    v1 = i
-    for j in Signalbranches:
-        v2 = j
-        if abs(np.corrcoef(Signalbranches[i],Signalbranches[j]))[1][0] > 0.75 and v1 != v2:
-            print(abs(np.corrcoef(Signalbranches[i],Signalbranches[j]))[1][0])
-            print(v1,v2)
-            arg.append([v1,v2])
-            corr.append(abs(np.corrcoef(Signalbranches[i],Signalbranches[j]))[1][0])
-print(arg)
-
-
-# In[21]:
-
-
-x=0
-sun=[]
-for item in arg:
-    sun.append([names[item[0]-1],names[item[1]-1],str(corr[x])[:5]])
-    x+=1
-for item in sun:
-    sun.remove([item[1],item[0],item[2]])
-for item in sun:
-    print(item[0]+" Is Correlated to "+item[1]+" with coefficient "+item[2])
-
-
-# In[27]:
-
-
-arg = []
-corr = []
-for i in EWKBackgroundbranches:
-    v1 = i
-    for j in EWKBackgroundbranches:
-        v2 = j
-        if abs(EWKBackgroundbranches[i].corr(EWKBackgroundbranches[j])) > 0.75 and v1 != v2:
-            print(abs(EWKBackgroundbranches[i].corr(EWKBackgroundbranches[j])))
-            print(v1,v2)
-            arg.append([v1,v2])
-            corr.append(abs(EWKBackgroundbranches[i].corr(EWKBackgroundbranches[j])))
-print(arg)
-
-
-# In[28]:
-
-
-x=0
-sun=[]
-for item in arg:
-    sun.append([names[item[0]-1],names[item[1]-1],str(corr[x])[:5]])
-    x+=1
-for item in sun:
-    sun.remove([item[1],item[0],item[2]])
-for item in sun:
-    print(item[0]+" Is Correlated to "+item[1]+" with coefficient "+item[2])
-
-
-# In[29]:
-
-
-arg = []
-corr = []
-for i in QCDBackgroundbranches:
-    v1 = i
-    for j in QCDBackgroundbranches:
-        v2 = j
-        if abs(QCDBackgroundbranches[i].corr(QCDBackgroundbranches[j])) > 0.75 and v1 != v2:
-            print(abs(QCDBackgroundbranches[i].corr(QCDBackgroundbranches[j])))
-            print(v1,v2)
-            arg.append([v1,v2])
-            corr.append(abs(QCDBackgroundbranches[i].corr(QCDBackgroundbranches[j])))
-print(arg)
-
-
-# In[30]:
-
-
-x=0
-sun=[]
-for item in arg:
-    sun.append([names[item[0]-1],names[item[1]-1],str(corr[x])[:5]])
-    x+=1
-for item in sun:
-    sun.remove([item[1],item[0],item[2]])
-for item in sun:
-    print(item[0]+" Is Correlated to "+item[1]+" with coefficient "+item[2])
 
 
 # In[11]:
