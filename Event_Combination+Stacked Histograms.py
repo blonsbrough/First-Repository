@@ -144,7 +144,7 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     
     for item in Branches:
         #mask = (item[b"mjj"] > 1000)&(item[b"MET"] > 200)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
-        mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"MET"] > METcut)&(item[b"mjj"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         for element in item[b"MET"][mask]:
             MET.append(element)
         for element in item[b"METPhi"][mask]:
@@ -184,7 +184,7 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     #Take the weights and scale them by number of inputs
     i=0 
     for item in Branches:
-        mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+        mask = (item[b"MET"] > METcut)&(item[b"mjj"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
         scale = (CrossSections[i]/sum(item[b"weight"]))
         i += 1
         Scales.append(scale)
@@ -296,7 +296,13 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
             else:
                 JetHighDeltaR = [3,1]
         Event = [JetHighmass,JetHighEtachange,JetHighPTProduct,JetHighEtaProduct,JetHighPhichange,JetHighDeltaR]
-        mjjoptimized.append(np.max(highEtachange))
+        
+        if JetHighEtachange == [1,3] or JetHighEtachange == [3,1]:
+            mjjoptimized.append(mjj_13[i])
+        elif JetHighEtachange == [2,3] or JetHighEtachange == [3,2]:
+            mjjoptimized.append(mjj_23[i])
+        elif JetHighEtachange == [1,2] or JetHighEtachange == [2,1]:
+            mjjoptimized.append(mjj[i])
         VBFJet.append(Event)
         Jetsort = JetHighEtachange
         if Jetsort[0] == 1:
@@ -335,12 +341,12 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
     if Graph == True:
         MET_ModifiedBranches = []
         for item in Branches:
-            mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+            mask = (item[b"MET"] > METcut)&(item[b"mjj"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
             masked = item[b"MET"][mask]
             MET_ModifiedBranches.append(masked)
         Weights = []
         for item in Branches:
-            mask = (item[b"mjj"] > METcut)&(item[b"MET"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
+            mask = (item[b"MET"] > METcut)&(item[b"mjj"] > mjj12cut)&(item[b"njet"] >= 2)&(item[b"nElec"] == 0)&(item[b"nMuon"] == 0)
             maskedbackground = item[b"weight"][mask]
             Weights.append(maskedbackground)
         for i in range(len(MET_ModifiedBranches)):
@@ -351,7 +357,6 @@ def Event_Combination(Input_Directory, Slice = False, Graph = False, optimize = 
         plt.show()
 
     return(Output)
-
 # In[3]:
 
 
@@ -450,52 +455,48 @@ def Background(Input_Directory, Graph = False, optimize = False, METcut = 0, mjj
 SignalDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Signal/150mjj/"
 EWKBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/EWKBDirect/"
 QCDBackgroundDirectory = "/data/users/jupyter-blonsbro/SUSY/Generations/13TeV/Background/QCDBDirect/"
-A = Event_Combination(SignalDirectory, Graph = False, optimize = True, METcut = 400)
-B = Background(EWKBDirect, Graph = False, optimize = True, METcut = 400)
-C = Background(QCDBDirect, Graph = False, optimize = True, METcut = 400)
+A = Event_Combination(SignalDirectory, Graph = False, optimize = True, METcut = 0)
+B = Background(EWKBDirect, Graph = False, optimize = True, METcut = 0)
+C = Background(QCDBDirect, Graph = False, optimize = True, METcut = 0)
 
 
 # In[5]:
+#Create Directories to be cut and pushed into files
+SD = dict((k, A[k]) for k in ['MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j1Eta","j2Eta","j3Eta","j1Phi","j2Phi","j3Phi","j2PT","j3PT","weight"]
+                                       if k in A)
+SDEvents = pd.DataFrame.from_dict(SD)
+EWKBD = dict((k, B[k]) for k in ['MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j1Eta","j2Eta","j3Eta","j1Phi","j2Phi","j3Phi","j2PT","j3PT","weight"]
+                                       if k in B)
+EWKBDEvents = pd.DataFrame.from_dict(EWKBD)
+QCDBD = dict((k, C[k]) for k in ['MET',"METPhi","j1PT","mjj","mjj_13","mjj_23","mjjoptimized","j1Eta","j2Eta","j3Eta","j1Phi","j2Phi","j3Phi","j2PT","j3PT","weight"]
+                                       if k in C)
+QCDBDEvents = pd.DataFrame.from_dict(QCDBD)
 
-
-#Some Statistics
-print("Statistics")
-print("Number of Signal Events")
-print(A["Number of Events"])
-
-print("Number of Backround Events")
-print(B["Number of Events"]+C["Number of Events"])
 
 
 # In[6]:
-
-
-print(B["Directories"])
-print(C["Directories"])
+#Create file of events with no cuts applied
+file1 = uproot.recreate("Combined Signal Ntuples.root")
+file1["Signal"] = SDEvents 
+file2 = uproot.recreate("Combined EWKBackground Ntuples.root")
+file2["EWKBackground"] = EWKBDEvents
+file3 = uproot.recreate("Combined QCDBackground Ntuples.root")
+file3["QCDBackground"] = QCDBDEvents
 
 
 # In[7]:
-
-
-df1 = pd.DataFrame(A["Directories"])
-df1
+#Create file of events with mjj>1000, MET>200, and 3 jets.
+file1 = uproot.recreate("Combined Signal Ntuples, mjj>1000, MET>200, 3 jets.root")
+#The j3Eta cut ensures no j3Eta values in the -1000 range, indicative of an error, most are around 1.
+file1["Signal"] = SDEvents.loc[(SDEvents['mjjoptimized'] > 1000) & (SDEvents['MET'] > 200) & (SDEvents['j3Eta'] > -500)]
+file2 = uproot.recreate("Combined EWKBackground Ntuples, mjj>1000, MET>200, 3 jets.root")
+file2["EWKBackground"] = EWKBDEvents.loc[(EWKBDEvents['mjjoptimized'] > 1000) & (EWKBDEvents['MET'] > 200) & (EWKBDEvents['j3Eta'] > -500)]
+file3 = uproot.recreate("Combined QCDBackground Ntuples, mjj>1000, MET>200, 3 jets.root")
+file3["QCDBackground"] = QCDBDEvents.loc[(QCDBDEvents['mjjoptimized'] > 1000) & (QCDBDEvents['MET'] > 200) & (QCDBDEvents['j3Eta'] > -500)]
 
 
 # In[8]:
 
-
-df2 = pd.DataFrame(B["Directories"])
-df2
-
-
-# In[9]:
-
-
-df3 = pd.DataFrame(C["Directories"])
-df3
-
-
-# In[10]:
 
 
 #Define Variables to Graph
